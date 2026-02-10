@@ -19,6 +19,7 @@ import (
 	"gladiator/internal/handlers"
 	"gladiator/internal/middleware"
 	"gladiator/internal/services"
+	ws "gladiator/internal/websocket"
 )
 
 //go:embed all:frontend_dist
@@ -98,6 +99,11 @@ func main() {
 	notebookHandler := handlers.NewNotebookHandler(nbSvc)
 	shareHandler := handlers.NewShareHandler(shareSvc, nbSvc)
 	rateExec := middleware.RateLimitExecution(redisClient)
+	hub := ws.NewHub()
+	go hub.Run()
+	wsHandler := handlers.WebSocketHandler(authSvc, nbSvc, hub)
+
+	e.GET("/ws/notebooks/:id", wsHandler)
 
 	api.GET("/notebooks/public", shareHandler.ListPublic)
 
