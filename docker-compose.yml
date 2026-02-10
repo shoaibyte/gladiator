@@ -1,0 +1,86 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: gladiator-postgres
+    environment:
+      POSTGRES_DB: gobook
+      POSTGRES_USER: gobook
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gobook"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gladiator-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: gladiator-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gladiator-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    container_name: gladiator-backend
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgresql://gobook:secret@postgres:5432/gobook?sslmode=disable
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: dev-secret-key-change-in-production-min-32-chars
+      ENVIRONMENT: development
+      PORT: 8080
+    volumes:
+      - .:/app
+      - go_modules:/go/pkg/mod
+      - /app/tmp
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - gladiator-network
+    command: air -c .air.toml
+
+  frontend:
+    image: node:20-alpine
+    container_name: gladiator-frontend
+    working_dir: /app/frontend
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:8080
+      VITE_WS_URL: ws://localhost:8080
+    volumes:
+      - ./frontend:/app/frontend
+      - frontend_modules:/app/frontend/node_modules
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    networks:
+      - gladiator-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  go_modules:
+  frontend_modules:
+
+networks:
+  gladiator-network:
+    driver: bridge

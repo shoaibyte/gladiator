@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: gladiator
+    env: docker
+    region: oregon
+    plan: starter
+    dockerfilePath: ./docker/Dockerfile
+    dockerContext: .
+    branch: main
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: PORT
+        value: 8080
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gladiator-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: gladiator-redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: APP_URL
+        value: https://gladiator.onrender.com
+    autoDeploy: true
+
+databases:
+  - name: gladiator-db
+    plan: starter
+    databaseName: gladiator
+    user: gladiator
