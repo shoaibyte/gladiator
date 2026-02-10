@@ -29,9 +29,16 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 p-4">
-      <div className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-8 shadow-xl">
-        <h1 className="text-2xl font-bold mb-6 text-center">Enter The Arena</h1>
+    <div className="min-h-screen min-h-[100dvh] relative flex items-center justify-center p-4 overflow-hidden">
+      <img
+        src="/viking-signup.png"
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover object-center"
+        decoding="async"
+      />
+      <div className="absolute inset-0 bg-slate-900/55 dark:bg-slate-950/65" aria-hidden />
+      <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/25 bg-white/15 dark:bg-slate-900/20 backdrop-blur-md p-6 sm:p-8 shadow-2xl">
+        <h1 className="text-2xl font-bold mb-6 text-center text-slate-900 dark:text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">Enter The Arena</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
           <input
@@ -67,7 +74,7 @@ export function RegisterPage() {
             Get Started
           </button>
         </form>
-        <p className="mt-4 text-center text-sm text-slate-500">
+        <p className="mt-4 text-center text-sm text-slate-700 dark:text-slate-300 drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">
           Already have an account? <Link to="/login" className="text-indigo-600 dark:text-bronze-400 font-medium">Sign in</Link>
         </p>
       </div>
