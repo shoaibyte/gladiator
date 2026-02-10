@@ -91,6 +91,19 @@ func main() {
 	usersGroup.GET("/me", userHandler.Me)
 	usersGroup.PATCH("/me", userHandler.UpdateMe)
 
+	execSvc := services.NewExecutorService(entClient, redisClient)
+	nbSvc := services.NewNotebookService(entClient, redisClient)
+	executionHandler := handlers.NewExecutionHandler(execSvc)
+	notebookHandler := handlers.NewNotebookHandler(nbSvc)
+	rateExec := middleware.RateLimitExecution(redisClient)
+
+	notebooksGroup := api.Group("/notebooks")
+	notebooksGroup.Use(jwtAuth, rateAPI)
+	notebooksGroup.GET("/:id", notebookHandler.Get)
+	notebooksGroup.POST("/:id/execute", executionHandler.Execute, rateExec)
+	notebooksGroup.GET("/:id/session", executionHandler.GetSession)
+	notebooksGroup.DELETE("/:id/session", executionHandler.ClearSession)
+
 	// SPA: serve embedded frontend (skip for /api and /health)
 	e.Use(echomw.StaticWithConfig(echomw.StaticConfig{
 		Root:       "frontend_dist",
