@@ -93,9 +93,13 @@ func main() {
 
 	execSvc := services.NewExecutorService(entClient, redisClient)
 	nbSvc := services.NewNotebookService(entClient, redisClient)
+	shareSvc := services.NewShareService(entClient)
 	executionHandler := handlers.NewExecutionHandler(execSvc)
 	notebookHandler := handlers.NewNotebookHandler(nbSvc)
+	shareHandler := handlers.NewShareHandler(shareSvc, nbSvc)
 	rateExec := middleware.RateLimitExecution(redisClient)
+
+	api.GET("/notebooks/public", shareHandler.ListPublic)
 
 	notebooksGroup := api.Group("/notebooks")
 	notebooksGroup.Use(jwtAuth, rateAPI)
@@ -104,6 +108,11 @@ func main() {
 	notebooksGroup.GET("/:id", notebookHandler.Get)
 	notebooksGroup.PATCH("/:id", notebookHandler.Update)
 	notebooksGroup.DELETE("/:id", notebookHandler.Delete)
+	notebooksGroup.POST("/:id/fork", shareHandler.Fork)
+	notebooksGroup.POST("/:id/share", shareHandler.Share)
+	notebooksGroup.GET("/:id/shares", shareHandler.ListShares)
+	notebooksGroup.PATCH("/:id/shares/:sid", shareHandler.UpdateShare)
+	notebooksGroup.DELETE("/:id/shares/:sid", shareHandler.RevokeShare)
 	notebooksGroup.POST("/:id/execute", executionHandler.Execute, rateExec)
 	notebooksGroup.GET("/:id/session", executionHandler.GetSession)
 	notebooksGroup.DELETE("/:id/session", executionHandler.ClearSession)
