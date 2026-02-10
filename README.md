@@ -1,6 +1,6 @@
-# Gladiator
+# GoViking
 
-Interactive Go notebooks in the browser — inspired by Elixir LiveBook. The Go gopher is your gladiator in the arena of code.
+Interactive Go notebooks in the browser — inspired by Elixir LiveBook. The Go gopher is your Viking in the arena of code.
 
 ## Stack
 

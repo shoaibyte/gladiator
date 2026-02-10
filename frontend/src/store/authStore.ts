@@ -45,6 +45,6 @@ export const useAuthStore = create<AuthState>()(
         }
       },
     }),
-    { name: 'gladiator-auth', partialize: (s) => ({ accessToken: s.accessToken, refreshToken: s.refreshToken }) }
+    { name: 'goviking-auth', partialize: (s) => ({ accessToken: s.accessToken, refreshToken: s.refreshToken }) }
   )
 )
