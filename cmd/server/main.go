@@ -99,7 +99,11 @@ func main() {
 
 	notebooksGroup := api.Group("/notebooks")
 	notebooksGroup.Use(jwtAuth, rateAPI)
+	notebooksGroup.POST("", notebookHandler.Create)
+	notebooksGroup.GET("", notebookHandler.List)
 	notebooksGroup.GET("/:id", notebookHandler.Get)
+	notebooksGroup.PATCH("/:id", notebookHandler.Update)
+	notebooksGroup.DELETE("/:id", notebookHandler.Delete)
 	notebooksGroup.POST("/:id/execute", executionHandler.Execute, rateExec)
 	notebooksGroup.GET("/:id/session", executionHandler.GetSession)
 	notebooksGroup.DELETE("/:id/session", executionHandler.ClearSession)
