@@ -16,7 +16,9 @@ import (
 	"github.com/rs/zerolog"
 	"gladiator/internal/config"
 	"gladiator/internal/database"
+	"gladiator/internal/handlers"
 	"gladiator/internal/middleware"
+	"gladiator/internal/services"
 )
 
 //go:embed all:frontend_dist
@@ -66,6 +68,28 @@ func main() {
 		}
 		return c.JSON(http.StatusOK, map[string]string{"status": "healthy"})
 	})
+
+	authCfg := services.NewAuthConfig(cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
+	authSvc := services.NewAuthService(entClient, redisClient, authCfg)
+	authHandler := handlers.NewAuthHandler(authSvc)
+	userHandler := handlers.NewUserHandler(entClient)
+	jwtAuth := middleware.JWTAuth(authSvc)
+	rateAuth := middleware.RateLimitAuth(redisClient)
+	rateAPI := middleware.RateLimitAPI(redisClient)
+
+	api := e.Group("/api/v1")
+	authGroup := api.Group("/auth")
+	authGroup.Use(rateAuth)
+	authGroup.POST("/register", authHandler.Register)
+	authGroup.POST("/login", authHandler.Login)
+	authGroup.POST("/refresh", authHandler.Refresh)
+	authGroup.POST("/logout", authHandler.Logout, jwtAuth, rateAPI)
+	authGroup.POST("/logout-all", authHandler.LogoutAll, jwtAuth, rateAPI)
+
+	usersGroup := api.Group("/users")
+	usersGroup.Use(jwtAuth, rateAPI)
+	usersGroup.GET("/me", userHandler.Me)
+	usersGroup.PATCH("/me", userHandler.UpdateMe)
 
 	// SPA: serve embedded frontend (skip for /api and /health)
 	e.Use(echomw.StaticWithConfig(echomw.StaticConfig{
